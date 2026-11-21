@@ -1,0 +1,790 @@
+/* ==========================================================================
+   agent-stream-ui 默认主题
+   设计约束：单文件、无构建依赖、可被宿主 token 覆盖（全部走 CSS 变量）。
+   ========================================================================== */
+
+.asui-chat {
+  --asui-bg: #0b0d12;
+  --asui-panel: #12151d;
+  --asui-panel-2: #171b25;
+  --asui-border: #232936;
+  --asui-border-strong: #2f3646;
+  --asui-text: #e6e9f0;
+  --asui-muted: #8b93a7;
+  --asui-accent: #5b8cff;
+  --asui-accent-soft: rgba(91, 140, 255, 0.14);
+  --asui-ok: #3ddc97;
+  --asui-warn: #f5b544;
+  --asui-err: #ff6b6b;
+  --asui-radius: 14px;
+  --asui-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  color: var(--asui-text);
+  background: var(--asui-bg);
+  border: 1px solid var(--asui-border);
+  border-radius: var(--asui-radius);
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.asui-chat *,
+.asui-chat *::before,
+.asui-chat *::after {
+  box-sizing: border-box;
+}
+
+@media (prefers-color-scheme: light) {
+  .asui-chat {
+    --asui-bg: #ffffff;
+    --asui-panel: #f7f8fb;
+    --asui-panel-2: #eef1f6;
+    --asui-border: #e3e7ef;
+    --asui-border-strong: #d3d9e5;
+    --asui-text: #1a1f2b;
+    --asui-muted: #5f6b80;
+    --asui-accent: #2f6bff;
+    --asui-accent-soft: rgba(47, 107, 255, 0.1);
+    --asui-ok: #12855f;
+    --asui-warn: #a86500;
+    --asui-err: #c62828;
+  }
+}
+
+[data-theme='light'] .asui-chat {
+  --asui-bg: #ffffff;
+  --asui-panel: #f7f8fb;
+  --asui-panel-2: #eef1f6;
+  --asui-border: #e3e7ef;
+  --asui-border-strong: #d3d9e5;
+  --asui-text: #1a1f2b;
+  --asui-muted: #5f6b80;
+  --asui-accent: #2f6bff;
+  --asui-accent-soft: rgba(47, 107, 255, 0.1);
+  --asui-ok: #12855f;
+  --asui-warn: #a86500;
+  --asui-err: #c62828;
+}
+
+/* ---------------------------------------------------------------- header */
+
+.asui-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--asui-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+  flex: 0 0 auto;
+}
+
+.asui-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.asui-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  color: var(--asui-accent);
+  background: var(--asui-accent-soft);
+  border: 1px solid rgba(91, 140, 255, 0.25);
+  flex: 0 0 auto;
+}
+
+.asui-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.asui-subtitle {
+  margin: 1px 0 0;
+  font-size: 12px;
+  color: var(--asui-muted);
+}
+
+.asui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  color: var(--asui-muted);
+  background: var(--asui-panel-2);
+  border: 1px solid var(--asui-border);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.asui-badge i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.asui-badge--ok {
+  color: var(--asui-ok);
+}
+.asui-badge--busy {
+  color: var(--asui-accent);
+}
+.asui-badge--busy i {
+  animation: asui-pulse 1.2s ease-in-out infinite;
+}
+.asui-badge--warn {
+  color: var(--asui-warn);
+}
+.asui-badge--warn i {
+  animation: asui-pulse 0.9s ease-in-out infinite;
+}
+.asui-badge--error {
+  color: var(--asui-err);
+}
+
+/* ------------------------------------------------------------------ list */
+
+.asui-list {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.asui-list-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 20px 8px;
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.asui-list::-webkit-scrollbar {
+  width: 10px;
+}
+.asui-list::-webkit-scrollbar-thumb {
+  background: var(--asui-border-strong);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.asui-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.asui-msg--user {
+  align-items: flex-end;
+}
+
+.asui-user-text {
+  margin: 0;
+  max-width: 82%;
+  padding: 9px 13px;
+  border-radius: 13px 13px 4px 13px;
+  background: var(--asui-accent-soft);
+  border: 1px solid rgba(91, 140, 255, 0.22);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* -------------------------------------------------------------- markdown */
+
+.asui-md {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.asui-md > *:first-child {
+  margin-top: 0;
+}
+.asui-md > *:last-child {
+  margin-bottom: 0;
+}
+
+.asui-p {
+  margin: 0;
+}
+
+.asui-h {
+  margin: 6px 0 0;
+  line-height: 1.35;
+  font-weight: 650;
+}
+.asui-h1 {
+  font-size: 19px;
+}
+.asui-h2 {
+  font-size: 17px;
+}
+.asui-h3 {
+  font-size: 15px;
+}
+.asui-h4,
+.asui-h5,
+.asui-h6 {
+  font-size: 14px;
+  color: var(--asui-muted);
+}
+
+.asui-list {
+  margin: 0;
+  padding-left: 20px;
+}
+.asui-list li {
+  margin: 2px 0;
+}
+
+.asui-quote {
+  margin: 0;
+  padding: 2px 0 2px 12px;
+  border-left: 2px solid var(--asui-border-strong);
+  color: var(--asui-muted);
+}
+
+.asui-hr {
+  border: none;
+  border-top: 1px solid var(--asui-border);
+  margin: 4px 0;
+}
+
+.asui-inline-code {
+  font-family: var(--asui-mono);
+  font-size: 0.88em;
+  padding: 1.5px 5px;
+  border-radius: 5px;
+  background: var(--asui-panel-2);
+  border: 1px solid var(--asui-border);
+}
+
+.asui-md a {
+  color: var(--asui-accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(91, 140, 255, 0.35);
+}
+.asui-md a:hover {
+  border-bottom-color: var(--asui-accent);
+}
+
+/* ------------------------------------------------------------- code block */
+
+.asui-code {
+  border: 1px solid var(--asui-border);
+  border-radius: 10px;
+  background: var(--asui-panel);
+  overflow: hidden;
+}
+
+.asui-code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--asui-border);
+  background: var(--asui-panel-2);
+}
+
+.asui-code-lang {
+  font-family: var(--asui-mono);
+  font-size: 11px;
+  color: var(--asui-muted);
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.asui-code-copy {
+  appearance: none;
+  border: none;
+  background: none;
+  color: var(--asui-muted);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.asui-code-copy:hover {
+  color: var(--asui-text);
+  background: var(--asui-border);
+}
+
+.asui-code pre {
+  margin: 0;
+  padding: 12px 14px;
+  overflow-x: auto;
+}
+
+.asui-code code {
+  font-family: var(--asui-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre;
+}
+
+/* ------------------------------------------------------------------ caret */
+
+.asui-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--asui-accent);
+  animation: asui-blink 1s steps(1, end) infinite;
+}
+
+/* ------------------------------------------------------------ tool calls */
+
+.asui-tool {
+  border: 1px solid var(--asui-border);
+  border-radius: 10px;
+  background: var(--asui-panel);
+  overflow: hidden;
+}
+.asui-tool--error {
+  border-color: rgba(255, 107, 107, 0.4);
+}
+
+.asui-tool-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.asui-tool-head:hover {
+  background: var(--asui-panel-2);
+}
+
+.asui-tool-icon {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  color: var(--asui-muted);
+  background: var(--asui-panel-2);
+  flex: 0 0 auto;
+}
+.asui-tool--ok .asui-tool-icon {
+  color: var(--asui-ok);
+}
+.asui-tool--error .asui-tool-icon {
+  color: var(--asui-err);
+}
+.asui-tool--running .asui-tool-icon {
+  color: var(--asui-accent);
+}
+
+.asui-tool-name {
+  font-family: var(--asui-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asui-tool-status {
+  font-size: 11px;
+  color: var(--asui-muted);
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--asui-border);
+}
+.asui-tool--ok .asui-tool-status {
+  color: var(--asui-ok);
+  border-color: rgba(61, 220, 151, 0.3);
+}
+.asui-tool--error .asui-tool-status {
+  color: var(--asui-err);
+  border-color: rgba(255, 107, 107, 0.3);
+}
+
+.asui-tool-duration {
+  font-family: var(--asui-mono);
+  font-size: 11px;
+  color: var(--asui-muted);
+  margin-left: auto;
+}
+
+.asui-tool-chevron {
+  color: var(--asui-muted);
+  transition: transform 0.15s ease;
+  font-size: 15px;
+  line-height: 1;
+}
+.asui-tool-chevron.is-open {
+  transform: rotate(90deg);
+}
+
+.asui-tool-body {
+  padding: 2px 10px 10px;
+  border-top: 1px solid var(--asui-border);
+}
+
+.asui-tool-args {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+}
+
+.asui-tool-arg {
+  display: grid;
+  grid-template-columns: minmax(64px, 128px) 1fr;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.asui-tool-arg dt {
+  font-family: var(--asui-mono);
+  color: var(--asui-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asui-tool-arg dd {
+  margin: 0;
+  font-family: var(--asui-mono);
+  word-break: break-all;
+}
+
+.asui-tool-raw,
+.asui-tool-preview {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--asui-bg);
+  border: 1px solid var(--asui-border);
+  font-family: var(--asui-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 180px;
+}
+
+.asui-tool-hint {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: var(--asui-muted);
+}
+
+/* ------------------------------------------------------------------ state */
+
+.asui-typing {
+  display: inline-flex;
+  gap: 4px;
+  padding: 6px 0;
+}
+.asui-typing span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--asui-muted);
+  animation: asui-bounce 1.2s ease-in-out infinite;
+}
+.asui-typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.asui-typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.asui-error-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.asui-error {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 107, 107, 0.32);
+  background: rgba(255, 107, 107, 0.07);
+  color: var(--asui-text);
+}
+.asui-error svg {
+  color: var(--asui-err);
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+.asui-error strong {
+  display: block;
+  font-size: 12.5px;
+}
+.asui-error p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--asui-muted);
+}
+
+.asui-interrupted {
+  margin: 0;
+  font-size: 12px;
+  color: var(--asui-warn);
+}
+
+.asui-inline-retry {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--asui-text);
+  background: var(--asui-panel-2);
+  border: 1px solid var(--asui-border-strong);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.asui-inline-retry:hover {
+  border-color: var(--asui-accent);
+  color: var(--asui-accent);
+}
+
+.asui-jump-bottom {
+  position: absolute;
+  right: 18px;
+  bottom: 14px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--asui-text);
+  background: var(--asui-panel-2);
+  border: 1px solid var(--asui-border-strong);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------ empty */
+
+.asui-empty {
+  flex: 1 1 auto;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  overflow-y: auto;
+}
+
+.asui-empty-inner {
+  max-width: 420px;
+  text-align: center;
+  color: var(--asui-muted);
+}
+.asui-empty-inner svg {
+  color: var(--asui-accent);
+}
+.asui-empty-inner h2 {
+  margin: 10px 0 6px;
+  font-size: 15px;
+  color: var(--asui-text);
+  font-weight: 600;
+}
+.asui-empty-inner p {
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.asui-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.asui-suggestion {
+  padding: 6px 11px;
+  font-size: 12px;
+  color: var(--asui-text);
+  background: var(--asui-panel);
+  border: 1px solid var(--asui-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.asui-suggestion:hover {
+  border-color: var(--asui-accent);
+  color: var(--asui-accent);
+}
+
+/* --------------------------------------------------------------- composer */
+
+.asui-composer {
+  flex: 0 0 auto;
+  padding: 10px 16px 12px;
+  border-top: 1px solid var(--asui-border);
+  background: var(--asui-panel);
+}
+
+.asui-composer-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 8px 8px 10px;
+  border: 1px solid var(--asui-border-strong);
+  border-radius: 12px;
+  background: var(--asui-bg);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.asui-composer-box:focus-within {
+  border-color: var(--asui-accent);
+  box-shadow: 0 0 0 3px var(--asui-accent-soft);
+}
+
+.asui-composer-spark {
+  color: var(--asui-muted);
+  flex: 0 0 auto;
+  margin-bottom: 7px;
+}
+
+.asui-composer-input {
+  flex: 1 1 auto;
+  min-height: 24px;
+  max-height: 200px;
+  padding: 2px 0;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--asui-text);
+  font: inherit;
+  line-height: 1.55;
+}
+.asui-composer-input::placeholder {
+  color: var(--asui-muted);
+}
+
+.asui-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.asui-btn--send {
+  color: #fff;
+  background: var(--asui-accent);
+}
+.asui-btn--send:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.asui-btn--stop {
+  color: var(--asui-err);
+  background: rgba(255, 107, 107, 0.12);
+  border-color: rgba(255, 107, 107, 0.3);
+}
+
+.asui-btn--retry {
+  color: var(--asui-warn);
+  background: rgba(245, 181, 68, 0.12);
+  border-color: rgba(245, 181, 68, 0.3);
+}
+
+.asui-composer-hint {
+  margin: 7px 2px 0;
+  font-size: 11px;
+  color: var(--asui-muted);
+}
+
+.asui-composer-hint kbd {
+  font-family: var(--asui-mono);
+  font-size: 10.5px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  border: 1px solid var(--asui-border);
+  background: var(--asui-panel-2);
+}
+
+.asui-footer {
+  flex: 0 0 auto;
+  padding: 0 16px 10px;
+  background: var(--asui-panel);
+}
+
+/* -------------------------------------------------------------- animation */
+
+@keyframes asui-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes asui-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+
+@keyframes asui-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .asui-caret,
+  .asui-typing span,
+  .asui-badge i {
+    animation: none;
+  }
+}

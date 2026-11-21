@@ -1,0 +1,65 @@
+{
+  "name": "agent-stream-ui",
+  "version": "0.1.0",
+  "description": "Agent 流式事件 → React 界面的最小运行时：SSE 分帧、增量 Markdown、Tool Call 卡片、停止/重试与断点续传",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "agent",
+    "llm",
+    "streaming",
+    "sse",
+    "react",
+    "typescript",
+    "ai-ui",
+    "generative-ui",
+    "tool-calling",
+    "mcp"
+  ],
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/agent-stream-ui.js",
+  "module": "./dist/agent-stream-ui.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/agent-stream-ui.js"
+    },
+    "./styles.css": "./dist/agent-stream-ui.css"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "vite",
+    "dev:server": "node server/mock-agent.mjs",
+    "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json",
+    "preview": "vite preview --port 4173",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "jsdom": "^31.0.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}
