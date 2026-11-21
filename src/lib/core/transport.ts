@@ -36,6 +36,8 @@ export interface HttpTransportOptions {
   idleTimeoutMs?: number
   /** 连续失败上限，默认 8。 */
   maxAttempts?: number
+  /** 首次重连退避，默认 500ms（测试里会调小）。 */
+  backoffBaseMs?: number
 }
 
 /** 把消息压成给服务端的纯文本历史，避免把 UI 状态（工具卡）回传。 */
@@ -57,7 +59,15 @@ function randomId(): string {
 }
 
 export function createHttpTransport(options: HttpTransportOptions): Transport {
-  const { url, headers, fetch: fetchImpl, buildBody, idleTimeoutMs, maxAttempts } = options
+  const {
+    url,
+    headers,
+    fetch: fetchImpl,
+    buildBody,
+    idleTimeoutMs,
+    maxAttempts,
+    backoffBaseMs,
+  } = options
 
   return {
     open(context) {
@@ -82,6 +92,7 @@ export function createHttpTransport(options: HttpTransportOptions): Transport {
         fetch: fetchImpl,
         ...(idleTimeoutMs === undefined ? {} : { idleTimeoutMs }),
         ...(maxAttempts === undefined ? {} : { maxAttempts }),
+        ...(backoffBaseMs === undefined ? {} : { backoffBaseMs }),
         onEvent: context.onFrame,
         onStatus: context.onStatus,
       })

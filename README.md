@@ -1,9 +1,33 @@
 # agent-stream-ui
 
+[![deploy](https://github.com/CAILeiz/agent-stream-ui/actions/workflows/deploy.yml/badge.svg)](https://github.com/CAILeiz/agent-stream-ui/actions/workflows/deploy.yml)
+[![demo](https://img.shields.io/badge/demo-online-3ddc97)](https://caileiz.github.io/agent-stream-ui/?auto=1)
+![tests](https://img.shields.io/badge/tests-79%20passing-brightgreen)
+![size](https://img.shields.io/badge/lib-gzip%2011.4%20kB-5b8cff)
+
 **Agent 流式事件 → React 界面的最小运行时。**
 SSE 分帧 · 断点续传 · 增量 Markdown · Tool Call 卡片 · 停止/重试 · 一帧一次渲染。
 
 > Agent 产品的前端难点不是"把字打出来"，而是把三个不确定性变成用户能看懂、能干预、能恢复的界面。
+
+**在线 Demo**：<https://caileiz.github.io/agent-stream-ui/?auto=1>（纯前端，无需后端）
+
+---
+
+## 30 秒看懂
+
+| 证明 | 数字 | 怎么验 |
+| --- | --- | --- |
+| **断流后状态逐字段一致** | 断流 1 次 vs 一次跑完：快照 `toEqual`；实测事件 58 / 58、**重复 0** | `tests/resume.test.ts`、demo 勾选「模拟断流」 |
+| **每帧解析成本** | 11.6k 字 / 580 帧：**0.062 ms 每帧**（markdown-it 全量 0.710 ms → **11×**） | `npm run bench` |
+| **体积** | 36 KB，**gzip 11.4 KB**，运行时零依赖（peer 仅 React） | `npm run build:lib` |
+| **质量门禁** | 79 个用例 + 类型检查 + 双构建，CI 每次推送都跑 | [Actions](https://github.com/CAILeiz/agent-stream-ui/actions/workflows/deploy.yml) |
+
+差异不在"能不能显示"，而在这三件事上：
+
+1. 别的实现断流后**从头重来**（用户看到内容闪一下、工具卡重复），这里带 `Last-Event-ID` 从断点续，靠游标去重；
+2. 别的实现每个 token **全量 parse + 全量 diff**，这里只重解析尾块（已闭合块命中缓存）；
+3. 别的实现把"连接断了"表现成**永远转圈**，这里 EOF / 空闲超时都会收敛成可重试的错误，并保留已生成内容。
 
 ![demo](docs/demo.png)
 
@@ -38,9 +62,11 @@ npm run dev        # 同时起 mock agent（8787）和 vite（5173）
 
 - **模拟断流**：mock 服务在第 3 帧后直接掐断 TCP。前端靠空闲看门狗发现、带 `Last-Event-ID` 重连、从第 4 帧继续，**事件总数与无断流时完全一致（58 条，无重复）**。
 - **失败演示**：工具返回 502 → 错误态 → 重试入口。
-- **脚本回放**：`?mock` 不用后端也能跑（生产构建默认走这条，方便静态托管）。
+- **脚本回放**：`?mock` 不用后端也能跑（**线上 demo 走的就是这条**，所以 GitHub Pages 上的纯静态页面也能点）。
 
 只跑前端：`npm run dev:web`（需要 mock 服务在 8787）。
+
+URL 参数：`?auto=1` 自动发一条 · `?flaky=1` 模拟断流 · `?failure=1` 失败演示 · `?mock` 纯前端回放 · `?theme=light` 浅色。
 
 ### 作为库使用
 
@@ -118,16 +144,28 @@ flowchart LR
 
 ---
 
-## 测试
+## 测试与基准
 
 ```bash
-npm test        # 77 个用例
+npm test        # 79 个用例
+npm run bench   # 增量渲染基准（需先构建 lib）
 npm run typecheck
 npm run build   # demo
 npm run build:lib
 ```
 
-覆盖：分帧边界（CRLF、多行 data、半帧拼接）、重连与去重、空闲看门狗、4xx/5xx 分流、reducer 全部状态迁移、Markdown 分块与 XSS、工具卡三态、停止/重试交互。
+覆盖：分帧边界（CRLF、多行 data、半帧拼接）、重连与去重、空闲看门狗、4xx/5xx 分流、reducer 全部状态迁移、**断流一致性（同一段对话断流与不断流的最终快照必须完全相等）**、Markdown 分块与 XSS、工具卡三态、停止/重试交互。
+
+基准结果（11,589 字符 / 280 块 / 580 帧，Node 22，单线程）：
+
+| 策略 | 每帧 | 60fps 预算占比 |
+| --- | ---: | ---: |
+| markdown-it 全量解析 | 0.710 ms | 4.3% |
+| 本库分块（关闭缓存） | 0.217 ms | 1.3% |
+| **本库增量（只重解析尾块）** | **0.062 ms** | **0.4%** |
+
+> 只测「切块 / 解析 / 创建元素」。React 的 reconciliation 与 DOM 提交两者相同，比较的正是被省掉的那段。
+> 如果基线还带代码高亮或 `innerHTML` 回填，差距会更大——那才是真实项目里掉帧的主因。
 
 ---
 
