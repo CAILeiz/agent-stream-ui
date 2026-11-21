@@ -61,7 +61,9 @@ export function App() {
   )
   const [flaky, setFlaky] = useState(params.has('flaky'))
   const [failure, setFailure] = useState(params.has('failure'))
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [theme, setTheme] = useState<'dark' | 'light'>(
+    params.get('theme') === 'light' ? 'light' : 'dark',
+  )
 
   const { events, received, push, reset } = useEventLog()
 
