@@ -22,7 +22,7 @@ SSE 分帧 · 断点续传 · 增量 Markdown · Tool Call 卡片 · 停止/重�
 | **断流后状态逐字段一致** | 断流 1 次 vs 一次跑完：快照 `toEqual`；实测事件 58 / 58、**重复 0** | `tests/resume.test.ts`、demo 勾选「模拟断流」 |
 | **每帧解析成本** | 11.6k 字 / 580 帧：**0.062 ms 每帧**（markdown-it 全量 0.710 ms → **11×**） | `npm run bench` |
 | **体积** | 36 KB，**gzip 11.4 KB**，运行时零依赖（peer 仅 React） | `npm run build:lib` |
-| **首屏** | Fast 3G 下 FCP **752 → 376 ms**（内联骨架屏：先画布局，再等 JS） | `npm run measure:fcp -- <url> 5 slow` |
+| **首屏** | 本地 A/B（Fast 3G、禁缓存、同一台机器）：FCP **752 → 376 ms**（内联骨架屏） | `npm run measure:fcp -- <url> 5 slow` |
 | **质量门禁** | 89 个用例 + 类型检查 + 双构建，CI 每次推送都跑 | [Actions](https://github.com/CAILeiz/agent-stream-ui/actions/workflows/deploy.yml) |
 
 差异不在"能不能显示"，而在这四件事上：
@@ -30,7 +30,10 @@ SSE 分帧 · 断点续传 · 增量 Markdown · Tool Call 卡片 · 停止/重�
 1. 别的实现断流后**从头重来**（用户看到内容闪一下、工具卡重复），这里带 `Last-Event-ID` 从断点续，靠游标去重；
 2. 别的实现每个 token **全量 parse + 全量 diff**，这里只重解析尾块（已闭合块命中缓存）；
 3. 别的实现把"连接断了"表现成**永远转圈**，这里 EOF / 空闲超时都会收敛成可重试的错误，并保留已生成内容；
-4. 别的实现**白屏等 JS**（首屏 ≈ 加载 + 解析 + 挂载），这里 HTML 里带骨架，首屏时间只取决于 HTML 到达。
+4. 别的实现**白屏等 JS**（首屏 ≈ 加载 + 解析 + 挂载），这里 HTML 里带骨架，JS 没到也先有布局。
+
+> 首屏这行的线上数据没法直接 A/B：GitHub Pages 的 TTFB 实测在 **0.8–10s** 之间抖，FCP 被它支配。
+> 骨架屏解决的是「JS 到达前不白屏」，不是「TTFB 更短」——这是量完才发现的，记在 [design-notes 第 11 节](docs/design-notes.md)。
 
 ![demo](docs/demo.gif)
 
