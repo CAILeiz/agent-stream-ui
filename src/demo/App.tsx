@@ -12,6 +12,9 @@ import { Inspector, type LoggedEvent } from './inspector'
 
 type Mode = 'script' | 'http'
 
+/** 指向任意实现了同一事件协议的服务端（见 examples/openai-compatible）。 */
+const STREAM_URL = (import.meta.env.VITE_STREAM_URL as string | undefined) ?? '/api/chat'
+
 const SUGGESTIONS = [
   '流式渲染怎么避免每次都重新 parse markdown？',
   '为什么不用 WebSocket？',
@@ -80,7 +83,7 @@ export function App() {
     if (mode === 'http') {
       return createAgentStream({
         transport: createHttpTransport({
-          url: '/api/chat',
+          url: STREAM_URL,
           // 演示里把看门狗调紧：代理挂住死连接时，2.5s 内没帧就重连
           idleTimeoutMs: 2500,
           buildBody: ({ text, history }) => ({

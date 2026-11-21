@@ -55,6 +55,33 @@ describe('reduceAgentEvent', () => {
     expect(snapshot.live?.toolCalls).toHaveLength(1)
   })
 
+  it('tool.args 增量拼接入参（OpenAI 的流式工具参数）', () => {
+    const snapshot = step([
+      { type: 'turn.start', turnId: 't1' },
+      { type: 'tool.call', callId: 'c1', name: 'search', arguments: '' },
+      { type: 'tool.args', callId: 'c1', arguments: '{"q":' },
+      { type: 'tool.args', callId: 'c1', arguments: '"杭州"}' },
+    ])
+
+    expect(snapshot.live?.toolCalls[0]?.args).toBe('{"q":"杭州"}')
+    expect(snapshot.live?.toolCalls[0]?.argsComplete).toBe(false)
+
+    const completed = reduceAgentEvent(
+      snapshot,
+      { type: 'tool.args', callId: 'c1', arguments: '', complete: true },
+      at,
+    )
+    expect(completed.live?.toolCalls[0]?.argsComplete).toBe(true)
+  })
+
+  it('未知 callId 的 tool.args 被忽略（不会凭空造卡）', () => {
+    const snapshot = step([
+      { type: 'turn.start', turnId: 't1' },
+      { type: 'tool.args', callId: 'ghost', arguments: '{}' },
+    ])
+    expect(snapshot.live?.toolCalls).toHaveLength(0)
+  })
+
   it('tool.result 落状态与耗时', () => {
     const snapshot = step([
       { type: 'turn.start', turnId: 't1' },

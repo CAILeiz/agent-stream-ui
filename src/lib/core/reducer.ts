@@ -24,6 +24,7 @@ const KNOWN_TYPES = new Set<string>([
   'message.delta',
   'message.done',
   'tool.call',
+  'tool.args',
   'tool.result',
   'turn.end',
   'error',
@@ -251,6 +252,23 @@ export function reduceAgentEvent(
             ? live.parts
             : [...live.parts, { kind: 'tool', callId: event.callId }],
         },
+      }
+    }
+
+    case 'tool.args': {
+      const live = snapshot.live
+      if (!live) return snapshot
+      const existing = live.toolCalls.find((item) => item.callId === event.callId)
+      if (!existing) return snapshot
+
+      const updated: ToolCallState = {
+        ...existing,
+        args: existing.args + event.arguments,
+        argsComplete: event.complete ?? existing.argsComplete,
+      }
+      return {
+        ...snapshot,
+        live: { ...live, toolCalls: upsertTool(live.toolCalls, updated) },
       }
     }
 

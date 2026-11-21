@@ -3,14 +3,168 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07090d" />
     <title>agent-stream-ui · 流式 Agent 界面运行时</title>
     <meta
       name="description"
       content="Agent 流式事件到 React 界面的最小运行时：SSE 分帧、增量 Markdown、Tool Call 卡片、停止/重试与断点续传"
     />
+    <style>
+      /* 首屏骨架：JS 还在下载时先画出布局，避免白屏。
+         React 挂载时会替换 #root 的内容，所以这里只需要"看起来对"。 */
+      :root {
+        color-scheme: dark;
+        --boot-bg: #07090d;
+        --boot-panel: #10131a;
+        --boot-border: #1f2532;
+        --boot-text: #e8ebf2;
+        --boot-muted: #8b93a7;
+        --boot-shimmer: rgba(255, 255, 255, 0.06);
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root {
+          color-scheme: light;
+          --boot-bg: #f4f6fa;
+          --boot-panel: #ffffff;
+          --boot-border: #e2e7f0;
+          --boot-text: #151a24;
+          --boot-muted: #5c677d;
+          --boot-shimmer: rgba(0, 0, 0, 0.05);
+        }
+      }
+
+      html,
+      body,
+      #root {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--boot-bg);
+        color: var(--boot-text);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+          'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .boot {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        height: 100%;
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 22px 24px 24px;
+      }
+
+      .boot-eyebrow {
+        margin: 0 0 6px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--boot-muted);
+      }
+
+      .boot-title {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: -0.01em;
+      }
+
+      .boot-lede {
+        margin: 8px 0 0;
+        font-size: 12.5px;
+        color: var(--boot-muted);
+      }
+
+      .boot-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 18px;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+
+      .boot-panel {
+        border: 1px solid var(--boot-border);
+        border-radius: 12px;
+        background: var(--boot-panel);
+      }
+
+      .boot-chat {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 16px;
+      }
+
+      .boot-line {
+        height: 10px;
+        border-radius: 999px;
+        background: var(--boot-shimmer);
+        animation: boot-pulse 1.4s ease-in-out infinite;
+      }
+
+      .boot-line.w60 {
+        width: 60%;
+      }
+      .boot-line.w80 {
+        width: 80%;
+      }
+      .boot-line.w40 {
+        width: 40%;
+      }
+
+      @keyframes boot-pulse {
+        0%,
+        100% {
+          opacity: 0.55;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 1080px) {
+        .boot-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .boot-aside {
+          display: none;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .boot-line {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <noscript>这个 demo 需要 JavaScript 才能运行。</noscript>
+      <div class="boot" aria-hidden="true">
+        <div>
+          <p class="boot-eyebrow">agent-stream-ui</p>
+          <h1 class="boot-title">流式 Agent 界面运行时</h1>
+          <p class="boot-lede">正在加载运行时…</p>
+        </div>
+        <div class="boot-grid">
+          <div class="boot-panel boot-chat">
+            <div class="boot-line w40"></div>
+            <div class="boot-line w80"></div>
+            <div class="boot-line w60"></div>
+            <div class="boot-line w80"></div>
+            <div class="boot-line w40"></div>
+          </div>
+          <div class="boot-panel boot-aside"></div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/demo/main.tsx"></script>
   </body>
 </html>

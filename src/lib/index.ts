@@ -70,6 +70,15 @@ export type {
 export { defaultScheduler, immediateScheduler, rafScheduler } from './core/scheduler'
 export type { FlushScheduler } from './core/scheduler'
 
+// 适配器
+export { createOpenAIStreamTranslator } from './adapters/openai'
+export type {
+  OpenAIStreamChunk,
+  OpenAIStreamTranslator,
+  OpenAIToolCallDelta,
+  OpenAIToolCallRef,
+} from './adapters/openai'
+
 // Markdown
 export { listItemText, splitBlocks } from './markdown/blocks'
 export type { BlockKind, MdBlock } from './markdown/blocks'

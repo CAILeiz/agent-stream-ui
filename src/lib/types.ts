@@ -17,6 +17,8 @@ export interface AgentEventPayloads {
   'message.delta': { text: string }
   'message.done': { messageId?: string }
   'tool.call': { callId: string; name: string; arguments?: string }
+  /** 工具参数增量：OpenAI/Anthropic 都是边生成边下发，界面可以边显示边解析。 */
+  'tool.args': { callId: string; arguments: string; complete?: boolean }
   'tool.result': {
     callId: string
     ok: boolean
@@ -40,6 +42,7 @@ export const AGENT_EVENT_TYPES: readonly AgentEventType[] = [
   'message.delta',
   'message.done',
   'tool.call',
+  'tool.args',
   'tool.result',
   'turn.end',
   'error',

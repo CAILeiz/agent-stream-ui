@@ -2,7 +2,8 @@
 
 [![deploy](https://github.com/CAILeiz/agent-stream-ui/actions/workflows/deploy.yml/badge.svg)](https://github.com/CAILeiz/agent-stream-ui/actions/workflows/deploy.yml)
 [![demo](https://img.shields.io/badge/demo-online-3ddc97)](https://caileiz.github.io/agent-stream-ui/?auto=1)
-![tests](https://img.shields.io/badge/tests-79%20passing-brightgreen)
+![tests](https://img.shields.io/badge/tests-89%20passing-brightgreen)
+![npm](https://img.shields.io/npm/v/agent-stream-ui?color=5b8cff)
 ![size](https://img.shields.io/badge/lib-gzip%2011.4%20kB-5b8cff)
 
 **Agent 流式事件 → React 界面的最小运行时。**
@@ -21,13 +22,15 @@ SSE 分帧 · 断点续传 · 增量 Markdown · Tool Call 卡片 · 停止/重�
 | **断流后状态逐字段一致** | 断流 1 次 vs 一次跑完：快照 `toEqual`；实测事件 58 / 58、**重复 0** | `tests/resume.test.ts`、demo 勾选「模拟断流」 |
 | **每帧解析成本** | 11.6k 字 / 580 帧：**0.062 ms 每帧**（markdown-it 全量 0.710 ms → **11×**） | `npm run bench` |
 | **体积** | 36 KB，**gzip 11.4 KB**，运行时零依赖（peer 仅 React） | `npm run build:lib` |
-| **质量门禁** | 79 个用例 + 类型检查 + 双构建，CI 每次推送都跑 | [Actions](https://github.com/CAILeiz/agent-stream-ui/actions/workflows/deploy.yml) |
+| **首屏** | Fast 3G 下 FCP **752 → 376 ms**（内联骨架屏：先画布局，再等 JS） | `npm run measure:fcp -- <url> 5 slow` |
+| **质量门禁** | 89 个用例 + 类型检查 + 双构建，CI 每次推送都跑 | [Actions](https://github.com/CAILeiz/agent-stream-ui/actions/workflows/deploy.yml) |
 
-差异不在"能不能显示"，而在这三件事上：
+差异不在"能不能显示"，而在这四件事上：
 
 1. 别的实现断流后**从头重来**（用户看到内容闪一下、工具卡重复），这里带 `Last-Event-ID` 从断点续，靠游标去重；
 2. 别的实现每个 token **全量 parse + 全量 diff**，这里只重解析尾块（已闭合块命中缓存）；
-3. 别的实现把"连接断了"表现成**永远转圈**，这里 EOF / 空闲超时都会收敛成可重试的错误，并保留已生成内容。
+3. 别的实现把"连接断了"表现成**永远转圈**，这里 EOF / 空闲超时都会收敛成可重试的错误，并保留已生成内容；
+4. 别的实现**白屏等 JS**（首屏 ≈ 加载 + 解析 + 挂载），这里 HTML 里带骨架，首屏时间只取决于 HTML 到达。
 
 ![demo](docs/demo.gif)
 
@@ -72,6 +75,10 @@ URL 参数：`?auto=1` 自动发一条 · `?flaky=1` 模拟断流 · `?failure=1
 
 ### 作为库使用
 
+```bash
+npm i agent-stream-ui
+```
+
 ```tsx
 import { AgentChat, createAgentStream, createHttpTransport } from 'agent-stream-ui'
 import 'agent-stream-ui/styles.css'
@@ -90,6 +97,29 @@ export default () => <AgentChat store={store} title="Agent 控制台" />
 ```ts
 import { createAgentStream, splitBlocks, parseSseChunk, reduceAgentEvent } from 'agent-stream-ui'
 ```
+
+接真实模型时，用内置的 OpenAI 适配器把上游 chunk 翻译成本库事件：
+
+```ts
+import { createOpenAIStreamTranslator } from 'agent-stream-ui'
+
+const translator = createOpenAIStreamTranslator()
+for await (const chunk of upstream) {
+  for (const event of translator.translate(chunk)) stream.write(event)
+}
+```
+
+完整可运行的例子见 [`examples/openai-compatible`](examples/openai-compatible/)。
+
+### 接真实模型
+
+```bash
+npm run build:lib
+OPENAI_API_KEY=sk-... OPENAI_MODEL=gpt-4o-mini npm run example   # 无 key 自动 MOCK
+VITE_STREAM_URL=http://127.0.0.1:8788/api/chat npm run dev:web  # 另开终端
+```
+
+示例里做了完整的一轮 Agent 往返：模型要求调工具 → 执行 → 带结果再请求 → 继续流式回答。
 
 ---
 
@@ -119,7 +149,8 @@ flowchart LR
 | --- | --- | --- |
 | `turn.start` | `{ turnId }` | 一回合开始（可重复，后者覆盖） |
 | `message.delta` | `{ text }` | 文本增量，按到达顺序拼接 |
-| `tool.call` | `{ callId, name, arguments? }` | 工具调用开始；`arguments` 可能是半截 JSON |
+| `tool.call` | `{ callId, name, arguments? }` | 工具调用开始；`arguments` 可以是空串，后续靠 `tool.args` 补 |
+| `tool.args` | `{ callId, arguments, complete? }` | 参数**增量**（OpenAI/Anthropic 都是分片下发）；`complete: true` 表示参数收口 |
 | `tool.result` | `{ callId, ok, preview?, durationMs? }` | 工具结束；`durationMs` 缺省时前端用本地时钟补 |
 | `message.done` | `{ messageId? }` | 正文完成（预留：服务端落库确认） |
 | `turn.end` | `{ reason: 'complete' \| 'stopped' \| 'error' }` | 回合结束；`stopped` 表示用户主动停 |
@@ -149,14 +180,21 @@ flowchart LR
 ## 测试与基准
 
 ```bash
-npm test        # 79 个用例
+npm test        # 89 个用例
 npm run bench   # 增量渲染基准（需先构建 lib）
 npm run typecheck
 npm run build   # demo
 npm run build:lib
 ```
 
-覆盖：分帧边界（CRLF、多行 data、半帧拼接）、重连与去重、空闲看门狗、4xx/5xx 分流、reducer 全部状态迁移、**断流一致性（同一段对话断流与不断流的最终快照必须完全相等）**、Markdown 分块与 XSS、工具卡三态、停止/重试交互。
+覆盖：分帧边界（CRLF、多行 data、半帧拼接）、重连与去重、空闲看门狗、4xx/5xx 分流、reducer 全部状态迁移、**断流一致性（同一段对话断流与不断流的最终快照必须完全相等）**、OpenAI chunk 翻译（分片参数、并发工具、缺 id 兜底）、Markdown 分块与 XSS、工具卡三态、停止/重试交互。
+
+首屏测量：
+
+```bash
+npm run preview -- --port 4173 &
+npm run measure:fcp -- http://127.0.0.1:4173/ 5 slow   # Fast 3G，取中位数
+```
 
 基准结果（11,589 字符 / 280 块 / 580 帧，Node 22，单线程）：
 
